@@ -9,7 +9,7 @@ import CoreML
 import SwiftUI
 
 struct ContentView: View {
-    @State private var wakeUp = Date.now
+    @State private var wakeUp = defaultWakeUp
     @State private var sleepAmount = 8.0
     @State private var coffees = 1
     
@@ -17,27 +17,45 @@ struct ContentView: View {
     @State private var alertMsg = ""
     @State private var showAlert = false
     
+    static var defaultWakeUp: Date {
+        var components = DateComponents()
+        components.hour = 7
+        components.minute = 0
+        return Calendar.current.date(from: components) ?? .now
+    }
+    
     var body: some View {
         NavigationStack {
             VStack {
-                Text("When do you want to wake up?").font(.headline)
-                DatePicker("Wake Up", selection: $wakeUp, displayedComponents: .hourAndMinute)
-                    .labelsHidden()
-                    .padding(.bottom)
+                Form {
+                    HStack(spacing: 8) {
+                        Text("When do you want to wake up?").font(.headline)
+                        Spacer()
+                        DatePicker("Wake Up", selection: $wakeUp, displayedComponents: .hourAndMinute)
+                            .labelsHidden()
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text("Desired amount of sleep").font(.headline)
+                        Stepper("\(sleepAmount.formatted()) hours", value: $sleepAmount, in: 4...12, step: 0.25)
+                    }
+                    
+                    
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text("Daily coffee intake").font(.headline)
+                        // The string is a special markdown syntax used for pluralization
+                        Stepper("^[\(coffees) cup](inflect:true)", value: $coffees, in: 0...20)
+                    }
+                }
                 
-                Text("Desired amount of sleep").font(.headline)
-                Stepper("\(sleepAmount.formatted()) hours", value: $sleepAmount, in: 4...12, step: 0.25)
-                    .padding(.bottom)
-                
-                Text("Daily coffee intake").font(.headline)
-                Stepper("\(coffees) cup(s)", value: $coffees, in: 0...20)
-                    .padding(.bottom)
-                
-                Button("Calculate", action: calculateSleep)
+                Button(action: calculateSleep, label: {
+                    Text("Calculate")
+                        .frame(maxWidth: .infinity)
+                })
                     .buttonStyle(.borderedProminent)
                     .controlSize(.large)
+                    .padding()
             }
-            .padding()
             .navigationTitle("CS Calc")
             .alert(alertTitle, isPresented: $showAlert) {
                 Button("OK") {}
